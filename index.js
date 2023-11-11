@@ -26,6 +26,7 @@ async function run() {
     console.log('mongodb connected')
 
     const foodCollections = client.db('ManageKitchen').collection('foods')
+    const reviewCollections = client.db('ManageKitchen').collection('reviews')
     app.post('/foods', async(req,res) =>{
 
         const foods = req.body;
@@ -34,17 +35,81 @@ async function run() {
         res.send(result)
     })
 
-    app.get('/foods', async(req,res) =>{
+
+    app.get('/limitFoods', async(req,res) =>{
         const query = {}
         const cursor =  foodCollections.find(query)
         const foods = await cursor.limit(3).toArray()
         res.send(foods)
     })
+
+
+    app.get('/foods', async(req,res) =>{
+        const query = {}
+        const cursor =  foodCollections.find(query)
+        const foods = await cursor.toArray()
+        res.send(foods)
+    })
     app.get('/foods/:id', async(req,res) =>{
-        const id = req.params.id
-        const query = {_id: new ObjectId(id)}
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id) }
         const food = await foodCollections.findOne(query)
         res.send(food)
+    })
+
+    //reviews
+
+    app.post('/reviews', async(req,res) =>{
+
+      const getReview = req.body;
+      const review = await reviewCollections.insertOne(getReview)
+      res.send(review)
+  })
+
+    app.get('/reviews', async(req,res) =>{
+        let query = {};
+        if(req.query.email){
+            query ={
+                email: req.query.email
+            }
+        }
+        const cursor = reviewCollections.find(query)
+        const reviews = await cursor.toArray()
+        res.send(reviews)
+    })
+
+
+    app.get('/reviews/:id', async(req,res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id) }
+      const review = await reviewCollections.findOne(query)
+      res.send(review)
+  })
+
+
+  app.put('/reviews/:id',async(req,res) =>{
+    const id = req.params.id;
+    const filter =  {_id: new ObjectId(id)}
+    const reviews = req.body;
+    const option = {upsert: true}
+
+    const updateReviews = {
+      $set:{
+        about:reviews.about,
+        rating:reviews.rating
+
+      }
+    }
+
+    const result = await reviewCollections.updateOne(filter,updateReviews,option)
+    res.send(result)
+  })
+
+    app.delete('/reviews/:id',async(req,res) =>{
+      const  id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await reviewCollections.deleteOne(query)
+      res.send(result)
     })
 
   }
