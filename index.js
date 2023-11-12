@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 require('dotenv').config()
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors())
@@ -20,6 +21,7 @@ const client = new MongoClient(uri, {
   }
 });
 
+
 async function run() {
   try {
 
@@ -27,105 +29,106 @@ async function run() {
 
     const foodCollections = client.db('ManageKitchen').collection('foods')
     const reviewCollections = client.db('ManageKitchen').collection('reviews')
-    app.post('/foods', async(req,res) =>{
+    app.post('/foods', async (req, res) => {
 
-        const foods = req.body;
-       
-        const result = await foodCollections.insertOne(foods)
-        res.send(result)
+      const foods = req.body;
+
+      const result = await foodCollections.insertOne(foods)
+      res.send(result)
     })
 
 
-    app.get('/limitFoods', async(req,res) =>{
-        const query = {}
-        const cursor =  foodCollections.find(query)
-        const foods = await cursor.limit(3).toArray()
-        res.send(foods)
+    app.get('/limitFoods', async (req, res) => {
+      const query = {}
+      const cursor = foodCollections.find(query)
+      const foods = await cursor.limit(3).toArray()
+      res.send(foods)
     })
 
 
-    app.get('/foods', async(req,res) =>{
-        const query = {}
-        const cursor =  foodCollections.find(query)
-        const foods = await cursor.toArray()
-        res.send(foods)
+    app.get('/foods', async (req, res) => {
+      const query = {}
+      const cursor = foodCollections.find(query)
+      const foods = await cursor.toArray()
+      res.send(foods)
     })
-    app.get('/foods/:id', async(req,res) =>{
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id) }
-        const food = await foodCollections.findOne(query)
-        res.send(food)
+    app.get('/foods/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const food = await foodCollections.findOne(query)
+      res.send(food)
     })
 
     //reviews
 
-    app.post('/reviews', async(req,res) =>{
+    app.post('/reviews', async (req, res) => {
 
       const getReview = req.body;
       const review = await reviewCollections.insertOne(getReview)
       res.send(review)
-  })
+    })
 
-    app.get('/reviews', async(req,res) =>{
-        let query = {};
-        if(req.query.email){
-            query ={
-                email: req.query.email
-            }
+    app.get('/reviews', async (req, res) => {
+
+      let query = {};
+      if (req.query.email) {
+        query = {
+          email: req.query.email
         }
-        const cursor = reviewCollections.find(query)
-        const reviews = await cursor.toArray()
-        res.send(reviews)
+      }
+      const cursor = reviewCollections.find(query)
+      const reviews = await cursor.toArray()
+      res.send(reviews)
     })
 
 
-    app.get('/reviews/:id', async(req,res) =>{
+    app.get('/reviews/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id) }
+      const query = { _id: new ObjectId(id) }
       const review = await reviewCollections.findOne(query)
       res.send(review)
-  })
+    })
 
 
-  app.put('/reviews/:id',async(req,res) =>{
-    const id = req.params.id;
-    const filter =  {_id: new ObjectId(id)}
-    const reviews = req.body;
-    const option = {upsert: true}
+    app.put('/reviews/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const reviews = req.body;
+      const option = { upsert: true }
 
-    const updateReviews = {
-      $set:{
-        about:reviews.about,
-        rating:reviews.rating
+      const updateReviews = {
+        $set: {
+          about: reviews.about,
+          rating: reviews.rating
 
+        }
       }
-    }
 
-    const result = await reviewCollections.updateOne(filter,updateReviews,option)
-    res.send(result)
-  })
+      const result = await reviewCollections.updateOne(filter, updateReviews, option)
+      res.send(result)
+    })
 
-    app.delete('/reviews/:id',async(req,res) =>{
-      const  id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+    app.delete('/reviews/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
       const result = await reviewCollections.deleteOne(query)
       res.send(result)
     })
 
   }
-finally {
-    
+  finally {
+
   }
 }
 run().catch(console.dir);
 
 
-app.get('/',(req,res)=>{
-    res.send('samiras kitchen')
+app.get('/', (req, res) => {
+  res.send('samiras kitchen')
 })
 
-app.listen(port, () =>{
-    console.log(`sa iras kitchen running on ${port}`)
+app.listen(port, () => {
+  console.log(`sa iras kitchen running on ${port}`)
 })
 //samirasKitchen
 
