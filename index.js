@@ -47,10 +47,14 @@ async function run() {
 
 
     app.get('/foods', async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      console.log(page,size)
       const query = {}
       const cursor = foodCollections.find(query)
-      const foods = await cursor.toArray()
-      res.send(foods)
+      const foods = await cursor.skip(page * size).limit(size).toArray()
+      const count = await foodCollections.estimatedDocumentCount();
+      res.send({count,foods})
     })
     app.get('/foods/:id', async (req, res) => {
       const id = req.params.id;
